@@ -13,7 +13,7 @@ const handType = {
   RoyalFlush: 9
 }
 
-const hand = function () {
+const Hand = function () {
   this.type = -1
   this.threeOfAKind = undefined
   this.fourOfAKind = undefined
@@ -27,11 +27,11 @@ const hand = function () {
   this.flushSuit = undefined
 }
 
-hand.prototype.clear = function () {
-  hand()
+Hand.prototype.clear = function () {
+  Hand()
 }
 
-hand.prototype.checkPairs = function (typeCount) {
+Hand.prototype.checkPairs = function (typeCount) {
   for (let i = 0; i < cardTypes.length; i++) {
     switch (typeCount[i]) {
       case 4:
@@ -105,7 +105,7 @@ hand.prototype.checkPairs = function (typeCount) {
   }
 }
 
-hand.prototype.evaluateHand = function (cards) {
+Hand.prototype.evaluateHand = function (cards) {
   // TODO: make this work with either 5 OR 7
   // const totalCards = 7
 
@@ -230,7 +230,7 @@ hand.prototype.evaluateHand = function (cards) {
   }
 }
 
-hand.prototype.toString = function () {
+Hand.prototype.toString = function () {
   switch (this.type) {
     case handType.Highcard: return 'High Card'
     case handType.Pair: return 'Pair'
@@ -245,4 +245,4 @@ hand.prototype.toString = function () {
   }
 }
 
-module.exports = hand
+module.exports = Hand

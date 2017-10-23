@@ -1,8 +1,8 @@
 const cardDeck = require('./cardDeck')
-const hand = require('./hand')
+const Hand = require('./hand')
 
 const cards = cardDeck.shuffle()
-const h = new hand()
+const h = new Hand()
 const temp = cards.slice(0, 7)
 h.evaluateHand(temp)
 

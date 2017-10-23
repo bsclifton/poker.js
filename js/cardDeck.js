@@ -1,4 +1,4 @@
-const {cardSuits, cardTypes, card} = require('./card')
+const {cardSuits, cardTypes, Card} = require('./card')
 const randoms = new Set()
 
 const getUniqueRandom = () => {
@@ -15,7 +15,7 @@ const cardDeck = {
     const cards = []
     randoms.clear()
     for (let index = 0; index < (cardSuits.length * cardTypes.length); index++) {
-      cards.push(new card(index, getUniqueRandom))
+      cards.push(new Card(index, getUniqueRandom))
     }
     return cards
   },

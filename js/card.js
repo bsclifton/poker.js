@@ -25,7 +25,7 @@ const cardType = {
 
 const cardTypes = Object.keys(cardType)
 
-const card = function (index, getUniqueRandom) {
+const Card = function (index, getUniqueRandom) {
   this.suit = Math.floor(index / cardTypes.length) % cardSuits.length
   this.type = index % cardTypes.length
   this.deckIndex = index
@@ -34,12 +34,12 @@ const card = function (index, getUniqueRandom) {
     : Math.random()
 }
 
-card.prototype.toString = function () {
+Card.prototype.toString = function () {
   return (cardTypes[this.type] + ' of ' + cardSuits[this.suit]) || ''
 }
 
 module.exports = {
-  card,
+  Card,
   cardSuit,
   cardSuits,
   cardType,
