@@ -7,12 +7,14 @@
     "lint": "standard",
     "lintfix": "standard --fix",
     "start": "webpack-dev-server",
-    "build": "webpack"
+    "build": "webpack",
+    "test": "mocha"
   },
   "author": "Brian Clifton",
   "license": "ISC",
   "devDependencies": {
     "html-webpack-plugin": "^2.30.1",
+    "mocha": "^4.0.1",
     "standard": "^10.0.3",
     "webpack": "^3.8.1",
     "webpack-dev-server": "^2.9.3"

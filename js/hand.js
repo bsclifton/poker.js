@@ -14,7 +14,7 @@ const handType = {
 }
 
 const Hand = function () {
-  this.type = -1
+  this.type = handType.Highcard
   this.threeOfAKind = undefined
   this.fourOfAKind = undefined
   this.pair1 = undefined
@@ -25,121 +25,70 @@ const Hand = function () {
   this.fullHouse3 = undefined
   this.fullHouse2 = undefined
   this.flushSuit = undefined
+  this.typeCount = []
+  this.suitCount = []
+  cardTypes.forEach((type) => this.typeCount.push(0))
+  cardSuits.forEach((suit) => this.suitCount.push(0))
 }
 
 Hand.prototype.clear = function () {
   Hand()
 }
 
-Hand.prototype.checkPairs = function (typeCount) {
-  for (let i = 0; i < cardTypes.length; i++) {
-    switch (typeCount[i]) {
-      case 4:
-        this.type = handType.FourOfAKind
-        this.fourOfAKind = i
-        break
-
-      case 3:
-        if (this.type === handType.Pair) {
-          this.type = handType.FullHouse
-          this.FullHouse3 = i
-          this.FullHouse2 = this.Pair1
-        } else if (this.type === handType.TwoPair) {
-          this.type = handType.FullHouse
-          this.FullHouse3 = i
-          if (this.Pair1 > this.Pair2) {
-            this.FullHouse2 = this.Pair1
-          } else {
-            this.FullHouse2 = this.Pair2
-          }
-        } else if (this.type < handType.ThreeOfAKind) {
-          this.type = handType.ThreeOfAKind
-          this.ThreeOfAKind = i
-        } else if (this.type === handType.ThreeOfAKind) {
-          // full house
-          this.type = handType.FullHouse
-          if (i > this.ThreeOfAKind) {
-            this.FullHouse3 = i
-            this.FullHouse2 = this.ThreeOfAKind
-          } else {
-            this.FullHouse3 = this.ThreeOfAKind
-            this.FullHouse2 = i
-          }
-        }
-        break
-
-      case 2:
-        if (this.type === handType.FullHouse) {
-          // check the 2nd pair
-          if (i > this.FullHouse2) {
-            this.FullHouse2 = i
-          }
-        }
-        if (this.type === handType.ThreeOfAKind) {
-          this.type = handType.FullHouse
-          this.FullHouse2 = i
-        } else if (this.type === handType.TwoPair) {
-          if (i > this.Pair1) {
-            this.Pair2 = this.Pair1
-            this.Pair1 = i
-          } else if (i > this.Pair2) {
-            this.Pair2 = i
-          }
-        } else if (this.type === handType.Pair) {
-          this.type = handType.TwoPair
-
-          if (this.Pair1 > i) {
-            this.Pair2 = i
-          } else {
-            this.Pair2 = this.Pair1
-            this.Pair1 = i
-          }
-        } else {
-          if (this.type < handType.Pair) {
-            this.type = handType.Pair
-            this.Pair1 = i
-          }
-        }
-        break
+Hand.prototype.checkForFlush = function (cards) {
+  for (var i = 0; i < this.suitCount.length; i++) {
+    if (this.suitCount[i] >= 5) {
+      this.flushSuit = i
+      break
     }
   }
-}
 
-Hand.prototype.evaluateHand = function (cards) {
-  // TODO: make this work with either 5 OR 7
-  // const totalCards = 7
+  if ((typeof this.flushSuit !== 'number') || (this.type > handType.Flush)) {
+    return
+  }
 
-  // non-flush card count
-  const highCard = []
-  const typeCount = []
-  const suitCount = []
+  this.type = handType.Flush
 
-  cardTypes.forEach((type) => typeCount.push(0))
-  cardSuits.forEach((suit) => suitCount.push(0))
-
-  this.clear()
-
+  const flushCards = []
   cards.forEach((card) => {
-    highCard.push(card)
-    typeCount[card.type]++
-    suitCount[card.suit]++
+    if (card.suit === this.flushSuit) {
+      flushCards.push(card.type)
+      if (card.type > this.flushHighCard) {
+        this.flushHighCard = card.type
+      }
+    }
   })
 
-  this.checkPairs(typeCount)
+  flushCards.sort((a, b) => {
+    return a - b
+  })
 
-  // look for a straight
+  for (i = 1, this.straightHighCard = flushCards[0]; i < flushCards.length; i++) {
+    if (flushCards[i] !== (this.straightHighCard + 1)) {
+      return
+    }
+    this.straightHighCard = flushCards[i]
+  }
+
+  this.type = (this.straightHighCard === cardType.Ace)
+    ? handType.RoyalFlush
+    : handType.StraightFlush
+}
+
+Hand.prototype.checkForStraight = function () {
   let cardsInaRow = 0
   let straightHigh = -1
   let straight = false
-  for (var i = 0; i < cardTypes.length; i++) {
-    if (typeCount[i] > 0) {
+
+  for (let i = 0; i < this.typeCount.length; i++) {
+    if (this.typeCount[i] > 0) {
       if (++cardsInaRow >= 5) {
         straight = true
         straightHigh = i
       } else {
         // Ace exception in A,2,3,4,5
         if ((cardsInaRow === 4) && (i === cardType.Five)) {
-          if (typeCount[cardType.Ace] > 0) {
+          if (this.typeCount[cardType.Ace] > 0) {
             cardsInaRow++
             straight = true
             // high card is 5, not ace
@@ -154,80 +103,97 @@ Hand.prototype.evaluateHand = function (cards) {
 
   if (straight && (this.type < handType.Straight)) {
     this.type = handType.Straight
-    this.StraightHighCard = straightHigh
+    this.straightHighCard = straightHigh
   }
+}
 
-  // check for same suit
-  let flush = false
-  let flushtype = 0
+Hand.prototype.checkForPairs = function () {
+  for (let i = 0; i < this.typeCount.length; i++) {
+    switch (this.typeCount[i]) {
+      case 4:
+        this.type = handType.FourOfAKind
+        this.fourOfAKind = i
+        break
 
-  for (i = 0; i < suitCount.length; i++) {
-    if (suitCount[i] >= 5) {
-      flush = true
-      flushtype = i
-      break
-    }
-  }
-
-  if (flush && (this.type < handType.Flush)) {
-    this.type = handType.Flush
-    this.FlushSuit = flushtype
-    // find the flush high card
-    cards.forEach((card) => {
-      if (card.suit === flushtype) {
-        if (card.type > this.FlushHighCard) {
-          this.FlushHighCard = card.type
+      case 3:
+        if (this.type === handType.Pair) {
+          this.type = handType.FullHouse
+          this.fullHouse3 = i
+          this.fullHouse2 = this.pair1
+        } else if (this.type === handType.TwoPair) {
+          this.type = handType.FullHouse
+          this.fullHouse3 = i
+          if (this.pair1 > this.pair2) {
+            this.fullHouse2 = this.pair1
+          } else {
+            this.fullHouse2 = this.pair2
+          }
+        } else if (this.type < handType.ThreeOfAKind) {
+          this.type = handType.ThreeOfAKind
+          this.threeOfAKind = i
+        } else if (this.type === handType.ThreeOfAKind) {
+          // full house
+          this.type = handType.FullHouse
+          if (i > this.threeOfAKind) {
+            this.fullHouse3 = i
+            this.fullHouse2 = this.threeOfAKind
+          } else {
+            this.fullHouse3 = this.threeOfAKind
+            this.fullHouse2 = i
+          }
         }
-      }
-    })
-  }
+        break
 
-  // check for straight flush & royal flush
-  if (flush && straight) {
-  //   let count3 = []
-  //   // [cardTypes.length * cardSuits.length]
+      case 2:
+        if (this.type === handType.FullHouse) {
+          // check the 2nd pair
+          if (i > this.fullHouse2) {
+            this.fullHouse2 = i
+          }
+        }
+        if (this.type === handType.ThreeOfAKind) {
+          this.type = handType.FullHouse
+          this.fullHouse2 = i
+        } else if (this.type === handType.TwoPair) {
+          if (i > this.pair1) {
+            this.pair2 = this.pair1
+            this.pair1 = i
+          } else if (i > this.pair2) {
+            this.pair2 = i
+          }
+        } else if (this.type === handType.Pair) {
+          this.type = handType.TwoPair
 
-    // gather info; Suit count per card type
-  //   for (i = 0; i < totalCards; i++) {
-  //     count3[(int)p[i].Type, (int)p[i].Suit]++
-  //   }
-
-    // check for royal / straight flush
-    cardsInaRow = 0
-    straightHigh = -1
-    let straightflush = false
-    for (i = 0; i < cardTypes.length; i++) {
-  //     //remember.. the person can have a straight flush
-  //     //& a straight with a high card at the same time
-  //     if (count3[i,(int)flushtype] > 0) {
-  //       if (++cardsInaRow >= 5) {
-  //         straightflush = true
-  //         straightHigh = i
-  //       } else {
-  //         // ace exception in A,2,3,4,5
-  //         if((cardsInaRow === 4) && (i === cardType.Five)){
-  //           if(typeCount[cardType.Ace] > 0){
-  //             cardsInaRow++
-  //             straightflush = true
-  //             straightHigh = i
-  //           }
-  //         }
-  //       }
-  //     } else {
-  //       cardsInaRow = 0
-  //     }
-    }
-
-    if (straightflush) {
-      this.type = handType.StraightFlush
-      this.StraightHighCard = straightHigh
-
-      // royal flush
-      if (this.StraightHighCard === cardType.Ace) {
-        this.type = handType.RoyalFlush
-      }
+          if (this.pair1 > i) {
+            this.pair2 = i
+          } else {
+            this.pair2 = this.pair1
+            this.pair1 = i
+          }
+        } else {
+          if (this.type < handType.Pair) {
+            this.type = handType.Pair
+            this.pair1 = i
+          }
+        }
+        break
     }
   }
+}
+
+const evaluateHand = function (cards) {
+  const hand = new Hand()
+
+  cards.forEach((card) => {
+    hand.typeCount[card.type]++
+    hand.suitCount[card.suit]++
+  })
+
+  hand.checkForPairs()
+  hand.checkForFlush(cards)
+  hand.checkForStraight()
+
+  return hand
 }
 
 Hand.prototype.toString = function () {
@@ -245,4 +211,8 @@ Hand.prototype.toString = function () {
   }
 }
 
-module.exports = Hand
+module.exports = {
+  evaluateHand,
+  Hand,
+  handType
+}
