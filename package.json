@@ -1,8 +1,7 @@
 {
   "name": "poker.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple poker client",
-  "main": "cardDeck.js",
   "scripts": {
     "lint": "standard",
     "lintfix": "standard --fix",
@@ -10,8 +9,13 @@
     "build": "webpack",
     "test": "mocha"
   },
+  "keywords": ["cards", "poker"],
   "author": "Brian Clifton",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bsclifton/poker.js/issues"
+  },
+  "homepage": "https://github.com/bsclifton/poker.js",
   "devDependencies": {
     "html-webpack-plugin": "^2.30.1",
     "mocha": "^4.0.1",
