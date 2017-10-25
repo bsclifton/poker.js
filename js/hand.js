@@ -196,6 +196,70 @@ const evaluateHand = function (cards) {
   return hand
 }
 
+const compareHand = function (hand1, hand2) {
+  if (hand1.type > hand2.type) return 1
+  if (hand1.type < hand2.type) return -1
+
+  switch (hand1.type) {
+    case handType.Highcard:
+      // TODO: ...
+      break
+
+    case handType.Pair:
+      if (hand1.pair1 > hand2.pair1) return 1
+      if (hand1.pair1 < hand2.pair1) return -1
+      // compare the highest 3 cards that aren't the pair
+      // TODO: ...
+      break
+
+    case handType.TwoPair:
+      if (hand1.pair1 > hand2.pair1) return 1
+      if (hand1.pair1 < hand2.pair1) return -1
+      if (hand1.pair2 > hand2.pair2) return 1
+      if (hand1.pair2 < hand2.pair2) return -1
+      // compare the highest card that isn't a pair
+      // TODO: ...
+      break
+
+    case handType.ThreeOfAKind:
+      if (hand1.threeOfAKind > hand2.threeOfAKind) return 1
+      if (hand1.threeOfAKind < hand2.threeOfAKind) return -1
+      // compare the highest 2 cards that aren't the three of a kind
+      // TODO: ...
+      break
+
+    case handType.Straight:
+    case handType.StraightFlush:
+      if (hand1.straightHighCard > hand2.straightHighCard) return 1
+      if (hand1.straightHighCard < hand2.straightHighCard) return -1
+      break
+
+    case handType.Flush:
+      if (hand1.flushHighCard > hand2.flushHighCard) return 1
+      if (hand1.flushHighCard < hand2.flushHighCard) return -1
+      break
+
+    case handType.FullHouse:
+      if (hand1.fullHouse3 > hand2.fullHouse3) return 1
+      if (hand1.fullHouse3 < hand2.fullHouse3) return -1
+      if (hand1.fullHouse2 > hand2.fullHouse2) return 1
+      if (hand1.fullHouse2 < hand2.fullHouse2) return -1
+      break
+
+    case handType.FourOfAKind:
+      if (hand1.fourOfAKind > hand2.fourOfAKind) return 1
+      if (hand1.fourOfAKind < hand2.fourOfAKind) return -1
+      // compare the highest card that isn't the four of a kind
+      // TODO: ...
+      break
+
+    case handType.RoyalFlush:
+      break
+  }
+
+  return 0
+}
+
 Hand.prototype.toString = function () {
   switch (this.type) {
     case handType.Highcard: return 'High Card'
@@ -213,6 +277,6 @@ Hand.prototype.toString = function () {
 
 module.exports = {
   evaluateHand,
-  Hand,
+  compareHand,
   handType
 }
