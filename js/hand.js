@@ -1,7 +1,7 @@
 const {cardSuits, cardType, cardTypes} = require('./card')
 
 const handType = {
-  Highcard: 0,
+  HighCard: 0,
   Pair: 1,
   TwoPair: 2,
   ThreeOfAKind: 3,
@@ -14,12 +14,12 @@ const handType = {
 }
 
 const Hand = function () {
-  this.type = handType.Highcard
+  this.type = handType.HighCard
   this.threeOfAKind = undefined
   this.fourOfAKind = undefined
   this.pair1 = undefined
   this.pair2 = undefined
-  this.highCard = undefined
+  this.highCard = -1
   this.straightHighCard = undefined
   this.flushHighCard = undefined
   this.fullHouse3 = undefined
@@ -33,6 +33,10 @@ const Hand = function () {
 
 Hand.prototype.clear = function () {
   Hand()
+}
+
+const numericSort = (a, b) => {
+  return a - b
 }
 
 Hand.prototype.checkForFlush = function (cards) {
@@ -59,9 +63,7 @@ Hand.prototype.checkForFlush = function (cards) {
     }
   })
 
-  flushCards.sort((a, b) => {
-    return a - b
-  })
+  flushCards.sort(numericSort)
 
   for (i = 1, this.straightHighCard = flushCards[0]; i < flushCards.length; i++) {
     if (flushCards[i] !== (this.straightHighCard + 1)) {
@@ -185,6 +187,9 @@ const evaluateHand = function (cards) {
   const hand = new Hand()
 
   cards.forEach((card) => {
+    if (card.type > hand.highCard) {
+      hand.highCard = card.type
+    }
     hand.typeCount[card.type]++
     hand.suitCount[card.suit]++
   })
@@ -196,37 +201,65 @@ const evaluateHand = function (cards) {
   return hand
 }
 
+const getCardTypes = function (hand) {
+  const cards = []
+  hand.typeCount.map((value, index, array) => {
+    for (var i = 0; i < value; i++) {
+      cards.push(index)
+    }
+  })
+  cards.sort(numericSort)
+  return cards
+}
+
+const compareCardTypes = function (cards1, cards2) {
+  // TODO: this should check isArray / length for both
+  // TODO: this should only do best of 5
+  for (let i = (cards1.length - 1); i >= 0; i--) {
+    if (cards1[i] > cards2[i]) return 1
+    if (cards1[i] < cards2[i]) return -1
+  }
+  return 0
+}
+
 const compareHand = function (hand1, hand2) {
   if (hand1.type > hand2.type) return 1
   if (hand1.type < hand2.type) return -1
 
+  let cards1 = getCardTypes(hand1)
+  let cards2 = getCardTypes(hand2)
+
   switch (hand1.type) {
-    case handType.Highcard:
-      // TODO: ...
+    case handType.HighCard:
+      if (hand1.highCard > hand2.highCard) return 1
+      if (hand1.highCard < hand2.highCard) return -1
       break
 
     case handType.Pair:
       if (hand1.pair1 > hand2.pair1) return 1
       if (hand1.pair1 < hand2.pair1) return -1
-      // compare the highest 3 cards that aren't the pair
-      // TODO: ...
-      break
+      // compare the remaining cards (filter out pair)
+      cards1 = cards1.filter((card) => ![hand1.pair1].includes(card))
+      cards2 = cards2.filter((card) => ![hand2.pair1].includes(card))
+      return compareCardTypes(cards1, cards2)
 
     case handType.TwoPair:
       if (hand1.pair1 > hand2.pair1) return 1
       if (hand1.pair1 < hand2.pair1) return -1
       if (hand1.pair2 > hand2.pair2) return 1
       if (hand1.pair2 < hand2.pair2) return -1
-      // compare the highest card that isn't a pair
-      // TODO: ...
-      break
+      // compare the remaining cards (filter out both pairs)
+      cards1 = cards1.filter((card) => ![hand1.pair1, hand1.pair2].includes(card))
+      cards2 = cards2.filter((card) => ![hand2.pair1, hand2.pair2].includes(card))
+      return compareCardTypes(cards1, cards2)
 
     case handType.ThreeOfAKind:
       if (hand1.threeOfAKind > hand2.threeOfAKind) return 1
       if (hand1.threeOfAKind < hand2.threeOfAKind) return -1
-      // compare the highest 2 cards that aren't the three of a kind
-      // TODO: ...
-      break
+      // compare the remaining cards (filter out the three of a kind)
+      cards1 = cards1.filter((card) => ![hand1.fourOfAKind].includes(card))
+      cards2 = cards2.filter((card) => ![hand2.fourOfAKind].includes(card))
+      return compareCardTypes(cards1, cards2)
 
     case handType.Straight:
     case handType.StraightFlush:
@@ -249,9 +282,10 @@ const compareHand = function (hand1, hand2) {
     case handType.FourOfAKind:
       if (hand1.fourOfAKind > hand2.fourOfAKind) return 1
       if (hand1.fourOfAKind < hand2.fourOfAKind) return -1
-      // compare the highest card that isn't the four of a kind
-      // TODO: ...
-      break
+      // compare the remaining cards (filter out the four of a kind)
+      cards1 = cards1.filter((card) => ![hand1.fourOfAKind].includes(card))
+      cards2 = cards2.filter((card) => ![hand2.fourOfAKind].includes(card))
+      return compareCardTypes(cards1, cards2)
 
     case handType.RoyalFlush:
       break
@@ -262,7 +296,7 @@ const compareHand = function (hand1, hand2) {
 
 Hand.prototype.toString = function () {
   switch (this.type) {
-    case handType.Highcard: return 'High Card'
+    case handType.HighCard: return 'High Card'
     case handType.Pair: return 'Pair'
     case handType.TwoPair: return 'Two Pairs'
     case handType.ThreeOfAKind: return 'Three of a Kind'
