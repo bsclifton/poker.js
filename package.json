@@ -9,7 +9,10 @@
     "build": "webpack",
     "test": "mocha"
   },
-  "keywords": ["cards", "poker"],
+  "keywords": [
+    "cards",
+    "poker"
+  ],
   "author": "Brian Clifton",
   "license": "ISC",
   "bugs": {
